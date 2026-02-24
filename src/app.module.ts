@@ -4,9 +4,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductsModule } from './modules/products/products.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { OrdersModule } from './modules/orders/orders.module';
 import { Product } from './entities/product.entity';
 import { Category } from './entities/category.entity';
 import { User } from './entities/user.entity';
+import { Order } from './entities/order.entity';
+import { OrderItem } from './entities/order-item.entity';
 
 @Module({
   imports: [
@@ -26,7 +29,7 @@ import { User } from './entities/user.entity';
           username: configService.get('DB_USERNAME', 'postgres'),
           password: configService.get('DB_PASSWORD', 'postgres'),
           database: configService.get('DB_DATABASE', 'postgres'),
-          entities: [Product, Category, User],
+          entities: [Product, Category, User, Order, OrderItem],
           synchronize: configService.get('NODE_ENV') === 'development',
           logging: configService.get('NODE_ENV') === 'development',
           ssl: isSupabase ? {
@@ -39,6 +42,7 @@ import { User } from './entities/user.entity';
     ProductsModule,
     CategoriesModule,
     AuthModule,
+    OrdersModule,
   ],
 })
 export class AppModule {}

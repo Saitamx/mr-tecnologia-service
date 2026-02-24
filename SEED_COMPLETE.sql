@@ -5,10 +5,28 @@
 -- Copia y pega todo el contenido en el editor SQL
 
 -- ============================================
--- 1. CREAR ENUM PARA ROLES DE USUARIO
+-- 1. CREAR ENUMS
 -- ============================================
 DO $$ BEGIN
     CREATE TYPE user_role AS ENUM ('admin', 'manager');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE order_status AS ENUM ('pending', 'processing', 'paid', 'shipped', 'delivered', 'cancelled');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE payment_method AS ENUM ('webpay', 'transfer', 'cash');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE payment_status AS ENUM ('pending', 'approved', 'rejected', 'cancelled');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
@@ -44,7 +62,47 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- ============================================
--- 4. CREAR TABLA PRODUCTS
+-- 4. CREAR TABLA ORDERS
+-- ============================================
+CREATE TABLE IF NOT EXISTS orders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "orderNumber" VARCHAR(50) NOT NULL UNIQUE,
+    "customerName" VARCHAR(200) NOT NULL,
+    "customerEmail" VARCHAR(255) NOT NULL,
+    "customerPhone" VARCHAR(50) NOT NULL,
+    "shippingAddress" TEXT,
+    subtotal DECIMAL(10, 2) NOT NULL,
+    discount DECIMAL(10, 2) DEFAULT 0,
+    total DECIMAL(10, 2) NOT NULL,
+    status order_status DEFAULT 'pending',
+    "paymentMethod" payment_method DEFAULT 'webpay',
+    "paymentStatus" payment_status DEFAULT 'pending',
+    "webpayToken" VARCHAR(255),
+    "webpayTransactionId" VARCHAR(255),
+    notes TEXT,
+    "createdAt" TIMESTAMP DEFAULT NOW(),
+    "updatedAt" TIMESTAMP DEFAULT NOW()
+);
+
+-- ============================================
+-- 5. CREAR TABLA ORDER_ITEMS
+-- ============================================
+CREATE TABLE IF NOT EXISTS order_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "orderId" UUID NOT NULL,
+    "productId" UUID NOT NULL,
+    "productName" VARCHAR(200) NOT NULL,
+    "unitPrice" DECIMAL(10, 2) NOT NULL,
+    quantity INTEGER NOT NULL,
+    subtotal DECIMAL(10, 2) NOT NULL,
+    "createdAt" TIMESTAMP DEFAULT NOW(),
+    "updatedAt" TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT fk_order FOREIGN KEY ("orderId") REFERENCES orders(id) ON DELETE CASCADE,
+    CONSTRAINT fk_product FOREIGN KEY ("productId") REFERENCES products(id) ON DELETE RESTRICT
+);
+
+-- ============================================
+-- 6. CREAR TABLA PRODUCTS
 -- ============================================
 CREATE TABLE IF NOT EXISTS products (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -65,16 +123,22 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 -- ============================================
--- 5. CREAR ÍNDICES
+-- 7. CREAR ÍNDICES
 -- ============================================
 CREATE INDEX IF NOT EXISTS idx_products_category ON products("categoryId");
 CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug);
 CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_orders_number ON orders("orderNumber");
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_payment_status ON orders("paymentStatus");
+CREATE INDEX IF NOT EXISTS idx_orders_customer_email ON orders("customerEmail");
+CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items("orderId");
+CREATE INDEX IF NOT EXISTS idx_order_items_product ON order_items("productId");
 
 -- ============================================
--- 6. INSERTAR CATEGORÍAS
+-- 8. INSERTAR CATEGORÍAS
 -- ============================================
 INSERT INTO categories (id, name, slug, description, image, "order", "isActive", "createdAt", "updatedAt")
 VALUES
@@ -94,7 +158,7 @@ ON CONFLICT (slug) DO UPDATE SET
   "updatedAt" = NOW();
 
 -- ============================================
--- 7. INSERTAR PRODUCTOS
+-- 9. INSERTAR PRODUCTOS
 -- ============================================
 -- Los productos usan subconsultas para obtener los IDs de las categorías por slug
 
@@ -317,7 +381,7 @@ ON CONFLICT (slug) DO UPDATE SET
   "updatedAt" = NOW();
 
 -- ============================================
--- 8. INSERTAR USUARIO ADMIN
+-- 10. INSERTAR USUARIO ADMIN
 -- ============================================
 -- Password: Ecq2357.
 -- IMPORTANTE: Si este hash no funciona, ejecuta el seed.ts:

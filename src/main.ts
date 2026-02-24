@@ -23,6 +23,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('products', 'Gestión de productos')
     .addTag('categories', 'Gestión de categorías')
+    .addTag('orders', 'Gestión de órdenes')
     .addTag('auth', 'Autenticación')
     .addBearerAuth()
     .build();
