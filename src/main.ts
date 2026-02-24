@@ -30,7 +30,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  // Permitir múltiples orígenes para desarrollo
+  // Permitir múltiples orígenes para desarrollo y producción
   const allowedOrigins = [
     'http://localhost:3000', // Frontend web
     'http://localhost:3001', // Backoffice
@@ -38,6 +38,8 @@ async function bootstrap() {
     'http://192.168.0.2:3001',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:3001',
+    'https://mr-tecnologia-front-web.vercel.app', // Frontend web producción
+    'https://mr-tecnologia-front-backoffice.vercel.app', // Backoffice producción
   ];
   
   // Agregar orígenes adicionales desde variables de entorno
