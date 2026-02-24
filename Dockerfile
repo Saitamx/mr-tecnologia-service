@@ -1,15 +1,13 @@
 FROM node:18-alpine
 
-# Instalar yarn globalmente
-RUN npm install -g yarn
-
 WORKDIR /app
 
 # Copiar archivos de dependencias
-COPY package.json yarn.lock* ./
+COPY package.json ./
+COPY yarn.lock* ./
 
 # Instalar dependencias
-RUN yarn install --frozen-lockfile
+RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; else yarn install; fi
 
 # Copiar el resto del código
 COPY . .
