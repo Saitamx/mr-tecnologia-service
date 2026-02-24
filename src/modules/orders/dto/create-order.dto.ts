@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsEmail, IsArray, IsOptional, IsEnum, IsNumber, Min, ValidateNested, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PaymentMethod } from '../../entities/order.entity';
+import { PaymentMethod } from '../../../entities/order.entity';
 
 export class CreateOrderItemDto {
   @ApiProperty({ example: 'uuid-product', description: 'ID del producto' })
