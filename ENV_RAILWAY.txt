@@ -1,0 +1,15 @@
+# Railway Environment Variables
+# Copy these to Railway project settings
+
+DB_HOST=aws-0-us-west-2.pooler.supabase.com
+DB_PORT=6543
+DB_USERNAME=postgres.qcyyaedhqxaizehqbxva
+DB_PASSWORD=Ecq235713.-
+DB_DATABASE=postgres
+
+JWT_SECRET=mr-tecnologia-super-secret-jwt-key-2024-production-min-32-chars-long
+
+PORT=3004
+NODE_ENV=production
+
+CORS_ORIGIN=https://mr-tecnologia-front-web.vercel.app,https://mr-tecnologia-front-backoffice.vercel.app
