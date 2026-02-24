@@ -25,4 +25,11 @@ export class AuthController {
   getProfile(@Request() req) {
     return req.user;
   }
+
+  @Post('reset-admin-password')
+  @ApiOperation({ summary: 'Resetear contraseña del admin (TEMPORAL - Solo desarrollo)' })
+  @ApiResponse({ status: 200, description: 'Contraseña reseteada' })
+  async resetAdminPassword() {
+    return this.authService.resetAdminPassword();
+  }
 }

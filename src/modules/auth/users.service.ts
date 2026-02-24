@@ -58,4 +58,43 @@ export class UsersService {
     }
     return null;
   }
+
+  async resetAdminPassword(): Promise<{ message: string; user: any }> {
+    const admin = await this.findByUsername('admin');
+    if (!admin) {
+      // Crear admin si no existe
+      const hashedPassword = await bcrypt.hash('Ecq2357.', 10);
+      const newAdmin = this.usersRepository.create({
+        username: 'admin',
+        email: 'saitam.developer.001@gmail.com',
+        password: hashedPassword,
+        role: 'admin' as any,
+        fullName: 'Administrador',
+        isActive: true,
+      });
+      const saved = await this.usersRepository.save(newAdmin);
+      return {
+        message: 'Usuario admin creado exitosamente',
+        user: {
+          username: saved.username,
+          email: saved.email,
+          role: saved.role,
+        },
+      };
+    } else {
+      // Actualizar contraseña del admin existente
+      const hashedPassword = await bcrypt.hash('Ecq2357.', 10);
+      admin.password = hashedPassword;
+      admin.isActive = true;
+      await this.usersRepository.save(admin);
+      return {
+        message: 'Contraseña del admin reseteada exitosamente',
+        user: {
+          username: admin.username,
+          email: admin.email,
+          role: admin.role,
+        },
+      };
+    }
+  }
 }

@@ -43,4 +43,8 @@ export class AuthService {
       throw new UnauthorizedException('Token inválido');
     }
   }
+
+  async resetAdminPassword() {
+    return this.usersService.resetAdminPassword();
+  }
 }
