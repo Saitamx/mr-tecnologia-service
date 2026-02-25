@@ -136,32 +136,66 @@ export class OrdersService {
   }
 
   async findAll(filters?: { status?: OrderStatus; paymentStatus?: PaymentStatus; customerId?: string }): Promise<Order[]> {
-    const query = this.ordersRepository.createQueryBuilder('order')
-      .leftJoinAndSelect('order.items', 'items')
-      .leftJoinAndSelect('items.product', 'product')
-      .orderBy('order.createdAt', 'DESC');
+    try {
+      const query = this.ordersRepository.createQueryBuilder('order')
+        .leftJoinAndSelect('order.items', 'items')
+        .leftJoinAndSelect('items.product', 'product')
+        .orderBy('order.createdAt', 'DESC');
 
-    if (filters?.status) {
-      query.where('order.status = :status', { status: filters.status });
-    }
+      const conditions: string[] = [];
+      const params: Record<string, any> = {};
 
-    if (filters?.paymentStatus) {
       if (filters?.status) {
-        query.andWhere('order.paymentStatus = :paymentStatus', { paymentStatus: filters.paymentStatus });
-      } else {
-        query.where('order.paymentStatus = :paymentStatus', { paymentStatus: filters.paymentStatus });
+        conditions.push('order.status = :status');
+        params.status = filters.status;
       }
-    }
 
-    if (filters?.customerId) {
-      if (filters?.status || filters?.paymentStatus) {
-        query.andWhere('order.customerId = :customerId', { customerId: filters.customerId });
-      } else {
-        query.where('order.customerId = :customerId', { customerId: filters.customerId });
+      if (filters?.paymentStatus) {
+        conditions.push('order.paymentStatus = :paymentStatus');
+        params.paymentStatus = filters.paymentStatus;
       }
-    }
 
-    return await query.getMany();
+      if (filters?.customerId) {
+        conditions.push('order.customerId = :customerId');
+        params.customerId = filters.customerId;
+      }
+
+      if (conditions.length > 0) {
+        query.where(conditions.join(' AND '), params);
+      }
+
+      return await query.getMany();
+    } catch (error) {
+      console.error('Error in findAll orders:', error);
+      // Si falla el join con productos, intentar sin el join del producto
+      const query = this.ordersRepository.createQueryBuilder('order')
+        .leftJoinAndSelect('order.items', 'items')
+        .orderBy('order.createdAt', 'DESC');
+
+      const conditions: string[] = [];
+      const params: Record<string, any> = {};
+
+      if (filters?.status) {
+        conditions.push('order.status = :status');
+        params.status = filters.status;
+      }
+
+      if (filters?.paymentStatus) {
+        conditions.push('order.paymentStatus = :paymentStatus');
+        params.paymentStatus = filters.paymentStatus;
+      }
+
+      if (filters?.customerId) {
+        conditions.push('order.customerId = :customerId');
+        params.customerId = filters.customerId;
+      }
+
+      if (conditions.length > 0) {
+        query.where(conditions.join(' AND '), params);
+      }
+
+      return await query.getMany();
+    }
   }
 
   async findOne(id: string): Promise<Order> {
