@@ -139,7 +139,6 @@ export class OrdersService {
     try {
       const query = this.ordersRepository.createQueryBuilder('order')
         .leftJoinAndSelect('order.items', 'items')
-        .leftJoinAndSelect('items.product', 'product')
         .orderBy('order.createdAt', 'DESC');
 
       const conditions: string[] = [];
@@ -164,37 +163,65 @@ export class OrdersService {
         query.where(conditions.join(' AND '), params);
       }
 
-      return await query.getMany();
+      const orders = await query.getMany();
+      
+      // Cargar productos de forma segura solo si existen
+      for (const order of orders) {
+        if (order.items && Array.isArray(order.items)) {
+          for (const item of order.items) {
+            try {
+              if (item.productId && !item.product) {
+                const product = await this.productsRepository.findOne({
+                  where: { id: item.productId },
+                });
+                if (product) {
+                  (item as any).product = product;
+                }
+              }
+            } catch (err) {
+              // Ignorar errores al cargar productos individuales
+              console.warn(`Could not load product ${item.productId} for order ${order.id}`);
+            }
+          }
+        }
+      }
+
+      return orders;
     } catch (error) {
       console.error('Error in findAll orders:', error);
-      // Si falla el join con productos, intentar sin el join del producto
-      const query = this.ordersRepository.createQueryBuilder('order')
-        .leftJoinAndSelect('order.items', 'items')
-        .orderBy('order.createdAt', 'DESC');
+      // Si hay error, intentar sin el join de items
+      try {
+        const query = this.ordersRepository.createQueryBuilder('order')
+          .orderBy('order.createdAt', 'DESC');
 
-      const conditions: string[] = [];
-      const params: Record<string, any> = {};
+        const conditions: string[] = [];
+        const params: Record<string, any> = {};
 
-      if (filters?.status) {
-        conditions.push('order.status = :status');
-        params.status = filters.status;
+        if (filters?.status) {
+          conditions.push('order.status = :status');
+          params.status = filters.status;
+        }
+
+        if (filters?.paymentStatus) {
+          conditions.push('order.paymentStatus = :paymentStatus');
+          params.paymentStatus = filters.paymentStatus;
+        }
+
+        if (filters?.customerId) {
+          conditions.push('order.customerId = :customerId');
+          params.customerId = filters.customerId;
+        }
+
+        if (conditions.length > 0) {
+          query.where(conditions.join(' AND '), params);
+        }
+
+        return await query.getMany();
+      } catch (fallbackError) {
+        console.error('Error in findAll orders fallback:', fallbackError);
+        // Retornar array vacío en lugar de lanzar error
+        return [];
       }
-
-      if (filters?.paymentStatus) {
-        conditions.push('order.paymentStatus = :paymentStatus');
-        params.paymentStatus = filters.paymentStatus;
-      }
-
-      if (filters?.customerId) {
-        conditions.push('order.customerId = :customerId');
-        params.customerId = filters.customerId;
-      }
-
-      if (conditions.length > 0) {
-        query.where(conditions.join(' AND '), params);
-      }
-
-      return await query.getMany();
     }
   }
 

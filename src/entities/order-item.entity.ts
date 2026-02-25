@@ -29,7 +29,7 @@ export class OrderItem {
   @Column({ type: 'uuid' })
   productId: string;
 
-  @ManyToOne(() => Product, { eager: true })
+  @ManyToOne(() => Product, { eager: false, nullable: true })
   @JoinColumn({ name: 'productId' })
   product: Product;
 
