@@ -47,7 +47,25 @@ CREATE TABLE IF NOT EXISTS categories (
 );
 
 -- ============================================
--- 3. CREAR TABLA USERS
+-- 3. CREAR TABLA CUSTOMERS
+-- ============================================
+CREATE TABLE IF NOT EXISTS customers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "fullName" VARCHAR(200) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone VARCHAR(50) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    address TEXT,
+    city VARCHAR(100),
+    region VARCHAR(100),
+    "isActive" BOOLEAN DEFAULT true,
+    "lastLogin" TIMESTAMP,
+    "createdAt" TIMESTAMP DEFAULT NOW(),
+    "updatedAt" TIMESTAMP DEFAULT NOW()
+);
+
+-- ============================================
+-- 4. CREAR TABLA USERS
 -- ============================================
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -62,11 +80,12 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- ============================================
--- 4. CREAR TABLA ORDERS
+-- 5. CREAR TABLA ORDERS
 -- ============================================
 CREATE TABLE IF NOT EXISTS orders (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "orderNumber" VARCHAR(50) NOT NULL UNIQUE,
+    "customerId" UUID,
     "customerName" VARCHAR(200) NOT NULL,
     "customerEmail" VARCHAR(255) NOT NULL,
     "customerPhone" VARCHAR(50) NOT NULL,
@@ -81,11 +100,12 @@ CREATE TABLE IF NOT EXISTS orders (
     "webpayTransactionId" VARCHAR(255),
     notes TEXT,
     "createdAt" TIMESTAMP DEFAULT NOW(),
-    "updatedAt" TIMESTAMP DEFAULT NOW()
+    "updatedAt" TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT fk_customer FOREIGN KEY ("customerId") REFERENCES customers(id) ON DELETE SET NULL
 );
 
 -- ============================================
--- 5. CREAR TABLA ORDER_ITEMS
+-- 6. CREAR TABLA ORDER_ITEMS
 -- ============================================
 CREATE TABLE IF NOT EXISTS order_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -102,7 +122,7 @@ CREATE TABLE IF NOT EXISTS order_items (
 );
 
 -- ============================================
--- 6. CREAR TABLA PRODUCTS
+-- 7. CREAR TABLA PRODUCTS
 -- ============================================
 CREATE TABLE IF NOT EXISTS products (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -123,22 +143,25 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 -- ============================================
--- 7. CREAR ÍNDICES
+-- 8. CREAR ÍNDICES
 -- ============================================
 CREATE INDEX IF NOT EXISTS idx_products_category ON products("categoryId");
 CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug);
 CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email);
+CREATE INDEX IF NOT EXISTS idx_customers_is_active ON customers("isActive");
 CREATE INDEX IF NOT EXISTS idx_orders_number ON orders("orderNumber");
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_payment_status ON orders("paymentStatus");
 CREATE INDEX IF NOT EXISTS idx_orders_customer_email ON orders("customerEmail");
+CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders("customerId");
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items("orderId");
 CREATE INDEX IF NOT EXISTS idx_order_items_product ON order_items("productId");
 
 -- ============================================
--- 8. INSERTAR CATEGORÍAS
+-- 9. INSERTAR CATEGORÍAS
 -- ============================================
 INSERT INTO categories (id, name, slug, description, image, "order", "isActive", "createdAt", "updatedAt")
 VALUES
@@ -158,7 +181,7 @@ ON CONFLICT (slug) DO UPDATE SET
   "updatedAt" = NOW();
 
 -- ============================================
--- 9. INSERTAR PRODUCTOS
+-- 10. INSERTAR PRODUCTOS
 -- ============================================
 -- Los productos usan subconsultas para obtener los IDs de las categorías por slug
 
@@ -381,7 +404,7 @@ ON CONFLICT (slug) DO UPDATE SET
   "updatedAt" = NOW();
 
 -- ============================================
--- 10. INSERTAR USUARIO ADMIN
+-- 11. INSERTAR USUARIO ADMIN
 -- ============================================
 -- Password: Ecq2357.
 -- IMPORTANTE: Si este hash no funciona, ejecuta el seed.ts:

@@ -62,7 +62,14 @@ async function bootstrap() {
       
       const normalizedOrigin = origin.replace(/\/$/, '');
       
-      if (allowedOrigins.includes(origin) || allowedOrigins.includes(normalizedOrigin)) {
+      // Permitir URLs de Vercel (producción y preview)
+      const isVercelOrigin = /^https:\/\/.*\.vercel\.app$/.test(origin);
+      
+      if (
+        allowedOrigins.includes(origin) || 
+        allowedOrigins.includes(normalizedOrigin) ||
+        isVercelOrigin
+      ) {
         callback(null, true);
       } else {
         console.warn(`🚫 CORS blocked origin: ${origin}`);

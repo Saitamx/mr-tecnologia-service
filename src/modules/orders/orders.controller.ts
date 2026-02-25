@@ -7,6 +7,7 @@ import {
   Param,
   UseGuards,
   Query,
+  Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
@@ -19,13 +20,33 @@ import { OrderStatus, PaymentStatus } from '../../entities/order.entity';
 @ApiTags('orders')
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Crear una nueva orden' })
+  @ApiOperation({ summary: 'Crear una nueva orden (autenticación opcional)' })
   @ApiResponse({ status: 201, description: 'Orden creada', type: Order })
-  create(@Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.create(createOrderDto);
+  create(@Body() createOrderDto: CreateOrderDto, @Request() req?: any) {
+    // Si hay un token de cliente, asociar la orden con el cliente
+    const authHeader = req?.headers?.authorization;
+    let customerId: string | undefined;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const payload = this.jwtService.verify(token, { secret: this.configService.get('JWT_SECRET') });
+        if (payload.type === 'customer') {
+          customerId = payload.sub;
+        }
+      } catch (error) {
+        // Si el token es inválido, continuar sin autenticación
+      }
+    }
+    
+    return this.ordersService.create(createOrderDto, customerId);
   }
 
   @Get()
@@ -34,14 +55,17 @@ export class OrdersController {
   @ApiOperation({ summary: 'Obtener todas las órdenes' })
   @ApiQuery({ name: 'status', required: false, enum: OrderStatus, description: 'Filtrar por estado' })
   @ApiQuery({ name: 'paymentStatus', required: false, enum: PaymentStatus, description: 'Filtrar por estado de pago' })
+  @ApiQuery({ name: 'customerId', required: false, description: 'Filtrar por ID de cliente' })
   @ApiResponse({ status: 200, description: 'Lista de órdenes', type: [Order] })
   findAll(
     @Query('status') status?: OrderStatus,
     @Query('paymentStatus') paymentStatus?: PaymentStatus,
+    @Query('customerId') customerId?: string,
   ) {
     const filters: any = {};
     if (status) filters.status = status;
     if (paymentStatus) filters.paymentStatus = paymentStatus;
+    if (customerId) filters.customerId = customerId;
     return this.ordersService.findAll(filters);
   }
 

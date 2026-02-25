@@ -22,10 +22,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
+    // Si es un cliente, retornar información del cliente
+    if (payload.type === 'customer') {
+      return { sub: payload.sub, email: payload.email, type: 'customer' };
+    }
+    
+    // Si es un usuario admin/manager
     const user = await this.usersService.findOne(payload.sub);
     if (!user || !user.isActive) {
       throw new UnauthorizedException();
     }
-    return { userId: user.id, username: user.username, role: user.role };
+    return { sub: user.id, username: user.username, role: user.role, type: 'user' };
   }
 }

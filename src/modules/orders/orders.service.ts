@@ -4,6 +4,7 @@ import { Repository, In } from 'typeorm';
 import { Order, OrderStatus, PaymentStatus, PaymentMethod } from '../../entities/order.entity';
 import { OrderItem } from '../../entities/order-item.entity';
 import { Product } from '../../entities/product.entity';
+import { Customer } from '../../entities/customer.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { WebpayService } from './webpay.service';
@@ -17,10 +18,12 @@ export class OrdersService {
     private orderItemsRepository: Repository<OrderItem>,
     @InjectRepository(Product)
     private productsRepository: Repository<Product>,
+    @InjectRepository(Customer)
+    private customersRepository: Repository<Customer>,
     private webpayService: WebpayService,
   ) {}
 
-  async create(createOrderDto: CreateOrderDto): Promise<Order> {
+  async create(createOrderDto: CreateOrderDto, customerId?: string): Promise<Order> {
     // Validar productos y stock
     const productIds = createOrderDto.items.map(item => item.productId);
     const products = await this.productsRepository.find({
@@ -61,16 +64,32 @@ export class OrdersService {
       });
     }
 
+    // Si hay customerId, obtener información del cliente
+    let customer: Customer | null = null;
+    if (customerId) {
+      customer = await this.customersRepository.findOne({ where: { id: customerId } });
+      if (customer) {
+        // Usar información del cliente si está disponible
+        createOrderDto.customerName = customer.fullName;
+        createOrderDto.customerEmail = customer.email;
+        createOrderDto.customerPhone = customer.phone;
+        if (!createOrderDto.shippingAddress && customer.address) {
+          createOrderDto.shippingAddress = customer.address;
+        }
+      }
+    }
+
     // Generar número de orden
     const orderNumber = await this.generateOrderNumber();
 
     // Crear orden
     const order = this.ordersRepository.create({
       orderNumber,
+      customerId: customerId || null,
       customerName: createOrderDto.customerName,
       customerEmail: createOrderDto.customerEmail,
       customerPhone: createOrderDto.customerPhone,
-      shippingAddress: createOrderDto.shippingAddress,
+      shippingAddress: createOrderDto.shippingAddress || (customer ? customer.address : null),
       subtotal,
       discount: createOrderDto.discount || 0,
       total: subtotal - (createOrderDto.discount || 0),
@@ -117,13 +136,17 @@ export class OrdersService {
       query.andWhere('order.paymentStatus = :paymentStatus', { paymentStatus: filters.paymentStatus });
     }
 
+    if (filters?.customerId) {
+      query.andWhere('order.customerId = :customerId', { customerId: filters.customerId });
+    }
+
     return await query.getMany();
   }
 
   async findOne(id: string): Promise<Order> {
     const order = await this.ordersRepository.findOne({
       where: { id },
-      relations: ['items', 'items.product'],
+      relations: ['items', 'items.product', 'customer'],
     });
 
     if (!order) {

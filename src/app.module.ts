@@ -5,11 +5,13 @@ import { ProductsModule } from './modules/products/products.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { OrdersModule } from './modules/orders/orders.module';
+import { CustomersModule } from './modules/customers/customers.module';
 import { Product } from './entities/product.entity';
 import { Category } from './entities/category.entity';
 import { User } from './entities/user.entity';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
+import { Customer } from './entities/customer.entity';
 
 @Module({
   imports: [
@@ -29,7 +31,7 @@ import { OrderItem } from './entities/order-item.entity';
           username: configService.get('DB_USERNAME', 'postgres'),
           password: configService.get('DB_PASSWORD', 'postgres'),
           database: configService.get('DB_DATABASE', 'postgres'),
-          entities: [Product, Category, User, Order, OrderItem],
+          entities: [Product, Category, User, Order, OrderItem, Customer],
           synchronize: configService.get('NODE_ENV') === 'development',
           logging: configService.get('NODE_ENV') === 'development',
           ssl: isSupabase ? {
@@ -43,6 +45,7 @@ import { OrderItem } from './entities/order-item.entity';
     CategoriesModule,
     AuthModule,
     OrdersModule,
+    CustomersModule,
   ],
 })
 export class AppModule {}

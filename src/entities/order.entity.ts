@@ -5,9 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { OrderItem } from './order-item.entity';
+import { Customer } from './customer.entity';
 
 export enum OrderStatus {
   PENDING = 'pending',
@@ -40,6 +43,14 @@ export class Order {
   @ApiProperty({ example: 'ORD-2024-001', description: 'Número de orden' })
   @Column({ type: 'varchar', length: 50, unique: true })
   orderNumber: string;
+
+  @ApiProperty({ example: 'uuid-customer', description: 'ID del cliente (opcional si es usuario registrado)', required: false })
+  @Column({ type: 'uuid', nullable: true })
+  customerId: string;
+
+  @ManyToOne(() => Customer, { nullable: true, eager: false })
+  @JoinColumn({ name: 'customerId' })
+  customer: Customer;
 
   @ApiProperty({ example: 'Juan Pérez', description: 'Nombre del cliente' })
   @Column({ type: 'varchar', length: 200 })
