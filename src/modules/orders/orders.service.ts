@@ -8,6 +8,7 @@ import { Customer } from '../../entities/customer.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { WebpayService } from './webpay.service';
+import { ShippingService } from './shipping.service';
 
 @Injectable()
 export class OrdersService {
@@ -21,6 +22,7 @@ export class OrdersService {
     @InjectRepository(Customer)
     private customersRepository: Repository<Customer>,
     private webpayService: WebpayService,
+    private shippingService: ShippingService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto, customerId?: string): Promise<Order> {
@@ -82,6 +84,16 @@ export class OrdersService {
     // Generar número de orden
     const orderNumber = await this.generateOrderNumber();
 
+    // Calcular costo de envío si se especificó tipo de envío
+    let shippingCost = 0;
+    if (createOrderDto.shippingType) {
+      const shippingOptions = this.shippingService.getAvailableShippingTypes();
+      const selectedShipping = shippingOptions.find(s => s.type === createOrderDto.shippingType);
+      if (selectedShipping) {
+        shippingCost = selectedShipping.price;
+      }
+    }
+
     // Crear orden
     const order = this.ordersRepository.create({
       orderNumber,
@@ -90,9 +102,10 @@ export class OrdersService {
       customerEmail: createOrderDto.customerEmail,
       customerPhone: createOrderDto.customerPhone,
       shippingAddress: createOrderDto.shippingAddress || (customer ? customer.address : null),
+      shippingType: createOrderDto.shippingType || null,
       subtotal,
       discount: createOrderDto.discount || 0,
-      total: subtotal - (createOrderDto.discount || 0),
+      total: subtotal - (createOrderDto.discount || 0) + shippingCost,
       paymentMethod: createOrderDto.paymentMethod || PaymentMethod.WEBPAY,
       status: OrderStatus.PENDING,
       paymentStatus: PaymentStatus.PENDING,
@@ -171,10 +184,28 @@ export class OrdersService {
 
   async updateStatus(id: string, updateStatusDto: UpdateOrderStatusDto): Promise<Order> {
     const order = await this.findOne(id);
+    const previousStatus = order.status;
     order.status = updateStatusDto.status;
     
     if (updateStatusDto.paymentStatus) {
       order.paymentStatus = updateStatusDto.paymentStatus;
+    }
+
+    // Si el estado cambió a "shipped" y hay un tipo de envío, crear el envío
+    if (updateStatusDto.status === OrderStatus.SHIPPED && order.shippingType && !order.trackingNumber) {
+      try {
+        const shipment = await this.shippingService.createShipment(
+          order.shippingType,
+          order.orderNumber,
+          order.customerName,
+          order.shippingAddress || '',
+          order.customerPhone,
+        );
+        order.trackingNumber = shipment.trackingNumber;
+      } catch (error) {
+        console.error('Error al crear envío:', error);
+        // No lanzar error, solo registrar
+      }
     }
 
     return await this.ordersRepository.save(order);

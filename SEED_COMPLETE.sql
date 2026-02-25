@@ -31,6 +31,12 @@ EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
+DO $$ BEGIN
+    CREATE TYPE shipping_type AS ENUM ('chilexpress', 'correos_chile', 'starken', 'motocicleta', 'retiro_tienda');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 -- ============================================
 -- 2. CREAR TABLA CATEGORIES
 -- ============================================
@@ -90,6 +96,8 @@ CREATE TABLE IF NOT EXISTS orders (
     "customerEmail" VARCHAR(255) NOT NULL,
     "customerPhone" VARCHAR(50) NOT NULL,
     "shippingAddress" TEXT,
+    "shippingType" shipping_type,
+    "trackingNumber" VARCHAR(255),
     subtotal DECIMAL(10, 2) NOT NULL,
     discount DECIMAL(10, 2) DEFAULT 0,
     total DECIMAL(10, 2) NOT NULL,

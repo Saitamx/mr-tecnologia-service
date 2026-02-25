@@ -13,6 +13,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@ne
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { OrdersService } from './orders.service';
+import { ShippingService } from './shipping.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { Order } from '../../entities/order.entity';
@@ -25,6 +26,7 @@ import { OrderStatus, PaymentStatus } from '../../entities/order.entity';
 export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
+    private readonly shippingService: ShippingService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
@@ -80,6 +82,13 @@ export class OrdersController {
   getMyOrders(@Request() req: any) {
     const customerId = req.user?.sub;
     return this.ordersService.findAll({ customerId });
+  }
+
+  @Get('shipping/types')
+  @ApiOperation({ summary: 'Obtener tipos de envío disponibles' })
+  @ApiResponse({ status: 200, description: 'Lista de tipos de envío disponibles' })
+  getShippingTypes() {
+    return this.shippingService.getAvailableShippingTypes();
   }
 
   @Get(':id')

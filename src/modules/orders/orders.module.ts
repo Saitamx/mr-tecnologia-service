@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { WebpayService } from './webpay.service';
+import { ShippingService } from './shipping.service';
 import { Order } from '../../entities/order.entity';
 import { OrderItem } from '../../entities/order-item.entity';
 import { Product } from '../../entities/product.entity';
@@ -23,7 +24,7 @@ import { Customer } from '../../entities/customer.entity';
     ConfigModule,
   ],
   controllers: [OrdersController],
-  providers: [OrdersService, WebpayService],
-  exports: [OrdersService],
+  providers: [OrdersService, WebpayService, ShippingService],
+  exports: [OrdersService, ShippingService],
 })
 export class OrdersModule {}

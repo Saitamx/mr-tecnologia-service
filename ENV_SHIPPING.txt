@@ -1,0 +1,45 @@
+# ============================================
+# VARIABLES DE ENTORNO PARA INTEGRACIONES DE ENVÍO
+# ============================================
+# Configura estas variables en Railway para las integraciones reales
+# Por ahora están simuladas, pero cuando tengas las credenciales reales,
+# reemplaza estos valores
+
+# ============================================
+# CHILEXPRESS
+# ============================================
+SHIPPING_CHILEXPRESS_ENABLED=true
+SHIPPING_CHILEXPRESS_PRICE=5000
+CHILEXPRESS_API_URL=https://api.chilexpress.cl
+CHILEXPRESS_API_KEY=tu_api_key_aqui
+
+# ============================================
+# CORREOS DE CHILE
+# ============================================
+SHIPPING_CORREOS_CHILE_ENABLED=true
+SHIPPING_CORREOS_CHILE_PRICE=3000
+CORREOS_CHILE_API_URL=https://api.correos.cl
+CORREOS_CHILE_API_KEY=tu_api_key_aqui
+
+# ============================================
+# STARKEN
+# ============================================
+SHIPPING_STARKEN_ENABLED=true
+SHIPPING_STARKEN_PRICE=4500
+STARKEN_API_URL=https://api.starken.cl
+STARKEN_API_KEY=tu_api_key_aqui
+
+# ============================================
+# ENVÍO EN MOTOCICLETA (Local)
+# ============================================
+SHIPPING_MOTOCICLETA_ENABLED=true
+SHIPPING_MOTOCICLETA_PRICE=3500
+MOTOCICLETA_API_KEY=tu_api_key_aqui
+
+# ============================================
+# NOTAS
+# ============================================
+# - Los precios están en CLP (pesos chilenos)
+# - Los precios base se pueden sobrescribir con las variables SHIPPING_*_PRICE
+# - Para deshabilitar un tipo de envío, establece SHIPPING_*_ENABLED=false
+# - Retiro en tienda siempre está habilitado y es gratuito

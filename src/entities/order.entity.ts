@@ -34,6 +34,14 @@ export enum PaymentStatus {
   CANCELLED = 'cancelled',
 }
 
+export enum ShippingType {
+  CHILEXPRESS = 'chilexpress',
+  CORREOS_CHILE = 'correos_chile',
+  STARKEN = 'starken',
+  MOTOCICLETA = 'motocicleta',
+  RETIRO_TIENDA = 'retiro_tienda',
+}
+
 @Entity('orders')
 export class Order {
   @ApiProperty({ example: '1', description: 'ID de la orden' })
@@ -67,6 +75,22 @@ export class Order {
   @ApiProperty({ example: 'Calle Falsa 123', description: 'Dirección de entrega' })
   @Column({ type: 'text', nullable: true })
   shippingAddress: string;
+
+  @ApiProperty({
+    example: 'chilexpress',
+    description: 'Tipo de envío',
+    enum: ShippingType,
+  })
+  @Column({
+    type: 'enum',
+    enum: ShippingType,
+    nullable: true,
+  })
+  shippingType: ShippingType;
+
+  @ApiProperty({ example: '1234567890', description: 'Número de seguimiento del envío', required: false })
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  trackingNumber: string;
 
   @ApiProperty({ example: 50000, description: 'Subtotal de la orden' })
   @Column({ type: 'decimal', precision: 10, scale: 2 })
