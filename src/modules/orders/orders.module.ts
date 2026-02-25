@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { WebpayService } from './webpay.service';
@@ -15,7 +15,7 @@ import { Customer } from '../../entities/customer.entity';
     TypeOrmModule.forFeature([Order, OrderItem, Product, Customer]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: any) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET'),
       }),
       inject: [ConfigService],

@@ -122,7 +122,7 @@ export class OrdersService {
     return this.findOne(savedOrder.id);
   }
 
-  async findAll(filters?: { status?: OrderStatus; paymentStatus?: PaymentStatus }): Promise<Order[]> {
+  async findAll(filters?: { status?: OrderStatus; paymentStatus?: PaymentStatus; customerId?: string }): Promise<Order[]> {
     const query = this.ordersRepository.createQueryBuilder('order')
       .leftJoinAndSelect('order.items', 'items')
       .leftJoinAndSelect('items.product', 'product')
