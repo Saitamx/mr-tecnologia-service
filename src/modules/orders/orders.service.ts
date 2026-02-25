@@ -146,11 +146,19 @@ export class OrdersService {
     }
 
     if (filters?.paymentStatus) {
-      query.andWhere('order.paymentStatus = :paymentStatus', { paymentStatus: filters.paymentStatus });
+      if (filters?.status) {
+        query.andWhere('order.paymentStatus = :paymentStatus', { paymentStatus: filters.paymentStatus });
+      } else {
+        query.where('order.paymentStatus = :paymentStatus', { paymentStatus: filters.paymentStatus });
+      }
     }
 
     if (filters?.customerId) {
-      query.andWhere('order.customerId = :customerId', { customerId: filters.customerId });
+      if (filters?.status || filters?.paymentStatus) {
+        query.andWhere('order.customerId = :customerId', { customerId: filters.customerId });
+      } else {
+        query.where('order.customerId = :customerId', { customerId: filters.customerId });
+      }
     }
 
     return await query.getMany();
