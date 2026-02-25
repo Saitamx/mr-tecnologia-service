@@ -99,7 +99,6 @@ export class CustomersService {
     dateTo?: string;
   }): Promise<Customer[]> {
     const query = this.customersRepository.createQueryBuilder('customer')
-      .leftJoinAndSelect('customer.orders', 'orders')
       .orderBy('customer.createdAt', 'DESC');
 
     if (filters?.search) {
