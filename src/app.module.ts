@@ -6,6 +6,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { CustomersModule } from './modules/customers/customers.module';
+import { StatsModule } from './modules/stats/stats.module';
 import { Product } from './entities/product.entity';
 import { Category } from './entities/category.entity';
 import { User } from './entities/user.entity';
@@ -46,6 +47,7 @@ import { Customer } from './entities/customer.entity';
     AuthModule,
     OrdersModule,
     CustomersModule,
+    StatsModule,
   ],
 })
 export class AppModule {}
