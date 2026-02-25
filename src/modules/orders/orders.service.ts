@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { Order, OrderStatus, PaymentStatus } from '../../entities/order.entity';
+import { Order, OrderStatus, PaymentStatus, PaymentMethod } from '../../entities/order.entity';
 import { OrderItem } from '../../entities/order-item.entity';
 import { Product } from '../../entities/product.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -74,13 +74,13 @@ export class OrdersService {
       subtotal,
       discount: createOrderDto.discount || 0,
       total: subtotal - (createOrderDto.discount || 0),
-      paymentMethod: createOrderDto.paymentMethod || 'webpay',
+      paymentMethod: createOrderDto.paymentMethod || PaymentMethod.WEBPAY,
       status: OrderStatus.PENDING,
       paymentStatus: PaymentStatus.PENDING,
       notes: createOrderDto.notes,
     });
 
-    const savedOrder = await this.ordersRepository.save(order);
+    const savedOrder = await this.ordersRepository.save(order) as Order;
 
     // Crear items de la orden
     const savedItems = orderItems.map(item => ({
