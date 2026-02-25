@@ -30,7 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // Si es un usuario admin/manager
     const user = await this.usersService.findOne(payload.sub);
     if (!user || !user.isActive) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Usuario no encontrado o inactivo. Por favor, inicia sesión nuevamente.');
     }
     return { sub: user.id, username: user.username, role: user.role, type: 'user' };
   }

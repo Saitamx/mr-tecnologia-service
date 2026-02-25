@@ -17,6 +17,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { Order } from '../../entities/order.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CustomerAuthGuard } from '../customers/guards/customer-auth.guard';
 import { OrderStatus, PaymentStatus } from '../../entities/order.entity';
 
 @ApiTags('orders')
@@ -69,6 +70,16 @@ export class OrdersController {
     if (paymentStatus) filters.paymentStatus = paymentStatus;
     if (customerId) filters.customerId = customerId;
     return this.ordersService.findAll(filters);
+  }
+
+  @Get('my-orders')
+  @UseGuards(CustomerAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener órdenes del cliente autenticado' })
+  @ApiResponse({ status: 200, description: 'Lista de órdenes del cliente', type: [Order] })
+  getMyOrders(@Request() req: any) {
+    const customerId = req.user?.sub;
+    return this.ordersService.findAll({ customerId });
   }
 
   @Get(':id')
